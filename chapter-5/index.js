@@ -19,31 +19,10 @@ natural.BayesClassifier.load('classifier.json', null, (err, clsfr) => {
   classifier = clsfr;
 });
 
-
 const bot = new Bot({
   token: process.env.SLACK_TOKEN,
   autoReconnect: true,
   autoMark: true
-});
-
-const wit = require('node-wit');
-
-const WIT_ACCESS_TOKEN = process.env.WIT_ACCESS_TOKEN;
-
-bot.respondTo('', (message, channel) => {
-  wit.captureTextIntent(WIT_ACCESS_TOKEN, message.text, (err, res) => {
-    if (err) {
-      bot.send(`Oops, an error occurred, please try again later!`, channel);
-      return;
-    }
-
-    // console.log(JSON.stringify(res, null, " "));
-
-    let data = res.outcomes[0];
-    let location = data.entities.location ? `and the location is ${data.entities.location[0].value}` : '';
-
-    bot.send(`Your intent is ${data.intent} ${location}`, channel);
-  });  
 });
 
 let inflector = natural.CountInflector;
@@ -51,7 +30,7 @@ let inflector = natural.CountInflector;
 bot.respondTo('what day is it', (message, channel) => {
   let date = new Date();
 
-  // use the ECMAScript Internationalization API to convert 
+  // use the ECMAScript Internationalization API to convert
   // month numbers into names
   let locale = 'en-us';
   let month = date.toLocaleString(locale, { month: 'long' });
@@ -82,7 +61,7 @@ bot.respondTo({ mention: true }, (message, channel, user) => {
   if (args[0] === 'set') {
     let place = args.slice(1).join(' ');
     settings[user.name] = place
-    
+
     bot.send(`Okay ${user.name}, I've set ${place} as your default location`, channel);
     return;
   }
@@ -92,7 +71,7 @@ bot.respondTo({ mention: true }, (message, channel, user) => {
     return;
   }
 
-  // The city is usually preceded by the word 'in'  
+  // The city is usually preceded by the word 'in'
   let city = args.indexOf('in') > 0 ? args.slice(args.indexOf('in') + 1) : settings[user.name];
 
   let option = classifier.classify(message.text).split(',');
@@ -128,10 +107,10 @@ bot.respondTo({ mention: true }, (message, channel, user) => {
 
       case 'temperature':
         let temp = Math.round(temperature);
-        let flavorText = temp > 25 ? 'hot!' : (temp < 10 ? 'cold!' : 'nice!');  
+        let flavorText = temp > 25 ? 'hot!' : (temp < 10 ? 'cold!' : 'nice!');
 
         response = `It's currently ${temp} degrees celsius in ${fullName}, that's ${flavorText}`;
-    } 
+    }
 
     bot.send(response, channel);
   });
@@ -148,8 +127,8 @@ function getWeather(location, callback) {
       if (err) callback(err);
       let data = JSON.parse(res.text);
 
-      if (data.cod === '404') {     
-        return callback(new Error('Sorry, I can\'t find that location!')); 
+      if (data.cod === '404') {
+        return callback(new Error('Sorry, I can\'t find that location!'));
       }
 
       console.log(data);
